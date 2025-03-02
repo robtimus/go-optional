@@ -1,0 +1,23 @@
+linters:
+  enable-all: true
+  disable:
+    - exhaustruct
+    - nlreturn
+    - tenv
+    - testpackage
+    - wsl
+
+linters-settings:
+  goconst:
+    ignore-tests: true
+  ireturn:
+    allow:
+      - error
+      - generic
+  lll:
+    line-length: 180
+  paralleltest:
+    ignore-missing: true
+  varnamelen:
+    ignore-decls:
+      - i int

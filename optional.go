@@ -6,6 +6,10 @@ import (
 	"log"
 )
 
+const noValuePresentMessage = "no value present"
+
+var errNoValuePresent = errors.New(noValuePresentMessage)
+
 // Optional is a container object that may or may not contain a value.
 // If no value is present, the object is considered empty.
 type Optional[T any] struct {
@@ -165,7 +169,7 @@ func (o Optional[T]) OrElseGet(supplier func() T) T {
 // OrElsePanic returns the value if present, or panics otherwise.
 func (o Optional[T]) OrElsePanic() T {
 	if o.value == nil {
-		log.Panic("no value present")
+		log.Panic(noValuePresentMessage)
 	}
 	return *o.value
 }
@@ -174,7 +178,7 @@ func (o Optional[T]) OrElsePanic() T {
 func (o Optional[T]) OrElseError() (T, error) {
 	if o.value == nil {
 		var zero T
-		return zero, errors.New("no value present")
+		return zero, errNoValuePresent
 	}
 	return *o.value, nil
 }
@@ -197,12 +201,12 @@ func (o Optional[T]) String() string {
 }
 
 // Equal compares two Optional objects. It will return true if both Optionals are empty, or if both Optionals have equal values.
-func Equal[T comparable](o Optional[T], other Optional[T]) bool {
-	if o.value == nil && other.value == nil {
+func Equal[T comparable](opt Optional[T], other Optional[T]) bool {
+	if opt.value == nil && other.value == nil {
 		return true
 	}
-	if o.value == nil || other.value == nil {
+	if opt.value == nil || other.value == nil {
 		return false
 	}
-	return *o.value == *other.value
+	return *opt.value == *other.value
 }

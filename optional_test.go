@@ -1,73 +1,74 @@
 package optional
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"testing"
 )
 
 func TestDefaultIsEmpty(t *testing.T) {
-	var o Optional[string]
+	var opt Optional[string]
 
-	if o.IsPresent() {
+	if opt.IsPresent() {
 		t.Error("default Optional should not be present")
 	}
-	if !o.IsEmpty() {
+	if !opt.IsEmpty() {
 		t.Error("defautl Optional should be empty")
 	}
 }
 
 func TestEmpty(t *testing.T) {
-	o := Empty[string]()
+	opt := Empty[string]()
 
-	if o.IsPresent() {
+	if opt.IsPresent() {
 		t.Error("optional.Empty() should not be present")
 	}
-	if !o.IsEmpty() {
+	if !opt.IsEmpty() {
 		t.Error("optional.Empty() should be empty")
 	}
 }
 
 func TestOf(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
-	if !o.IsPresent() {
+	if !opt.IsPresent() {
 		t.Error("optional.Of(1) should be present")
 	}
-	if o.IsEmpty() {
+	if opt.IsEmpty() {
 		t.Error("optional.Of(1) should not be empty")
 	}
 }
 
 func TestOfNillableWithNil(t *testing.T) {
-	o := OfNillable[int](nil)
+	opt := OfNillable[int](nil)
 
-	if o.IsPresent() {
+	if opt.IsPresent() {
 		t.Error("optional.OfNillable(nil) should not be present")
 	}
-	if !o.IsEmpty() {
+	if !opt.IsEmpty() {
 		t.Error("optional.OfNillable(nil) should be empty")
 	}
 }
 
 func TestOfNillableWithNonNil(t *testing.T) {
 	v := 1
-	o := OfNillable(&v)
+	opt := OfNillable(&v)
 
-	if !o.IsPresent() {
+	if !opt.IsPresent() {
 		t.Error("optional.OfNillable(*1) should be present")
 	}
-	if o.IsEmpty() {
+	if opt.IsEmpty() {
 		t.Error("optional.OfNillable(*1) should not be empty")
 	}
 }
 
 func TestIfPresentWhenEmpty(t *testing.T) {
-	o := Empty[string]()
+	opt := Empty[string]()
 
 	action := capturingAction[string]{}
 
-	o.IfPresent(action.Invoke)
+	opt.IfPresent(action.Invoke)
 
 	if len(action.arguments) != 0 {
 		t.Errorf("action given to optional.Empty().IfPresent should not be invoked, was invoked with %v", action.arguments)
@@ -75,11 +76,11 @@ func TestIfPresentWhenEmpty(t *testing.T) {
 }
 
 func TestIfPresentWhenPresent(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
 	action := capturingAction[int]{}
 
-	o.IfPresent(action.Invoke)
+	opt.IfPresent(action.Invoke)
 
 	if len(action.arguments) != 1 || action.arguments[0] != 1 {
 		t.Errorf("action given to optional.Of(1).IfPresent should be invoked with [1], was %v", action.arguments)
@@ -87,12 +88,12 @@ func TestIfPresentWhenPresent(t *testing.T) {
 }
 
 func TestIfPresentOrElseWhenEmpty(t *testing.T) {
-	o := Empty[string]()
+	opt := Empty[string]()
 
 	action := capturingAction[string]{}
 	emptyAction := capturingNoArgAction{}
 
-	o.IfPresentOrElse(action.Invoke, emptyAction.Invoke)
+	opt.IfPresentOrElse(action.Invoke, emptyAction.Invoke)
 
 	if len(action.arguments) != 0 {
 		t.Errorf("action given to optional.Empty().IfPresentOrElse should not be invoked, was invoked with %v", action.arguments)
@@ -103,12 +104,12 @@ func TestIfPresentOrElseWhenEmpty(t *testing.T) {
 }
 
 func TestIfPresentOrElseWhenPresent(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
 	action := capturingAction[int]{}
 	emptyAction := capturingNoArgAction{}
 
-	o.IfPresentOrElse(action.Invoke, emptyAction.Invoke)
+	opt.IfPresentOrElse(action.Invoke, emptyAction.Invoke)
 
 	if len(action.arguments) != 1 || action.arguments[0] != 1 {
 		t.Errorf("action given to optional.Of(1).IfPresentOrElse should be invoked with [1], was %v", action.arguments)
@@ -125,11 +126,11 @@ func TestFilterWhenEmpty(t *testing.T) {
 		result := parameters[i]
 
 		t.Run(fmt.Sprintf("Filter returns %v", result), func(t *testing.T) {
-			o := Empty[string]()
+			opt := Empty[string]()
 
 			predicate := capturingPredicate[string]{result: parameters[i]}
 
-			filtered := o.Filter(predicate.Invoke)
+			filtered := opt.Filter(predicate.Invoke)
 
 			if !filtered.IsEmpty() {
 				t.Errorf("optional.Empty().Filter should return an empty Optional, was %v", filtered)
@@ -142,17 +143,17 @@ func TestFilterWhenEmpty(t *testing.T) {
 }
 
 func TestFilterWhenPresentAndPredicateReturnsTrue(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
 	predicate := capturingPredicate[int]{result: true}
 
-	filtered := o.Filter(predicate.Invoke)
+	filtered := opt.Filter(predicate.Invoke)
 
 	if filtered.IsEmpty() {
 		t.Errorf("optional.Of(1).Filter should not return an empty Optional")
 	}
-	if filtered.value != o.value {
-		t.Errorf("optional.Of(1).Filter should return an Optional with the same value (%v), was %v", o.value, filtered.value)
+	if filtered.value != opt.value {
+		t.Errorf("optional.Of(1).Filter should return an Optional with the same value (%v), was %v", opt.value, filtered.value)
 	}
 	if len(predicate.arguments) != 1 || predicate.arguments[0] != 1 {
 		t.Errorf("predicate given to optional.Empty().Filter should be invoked with [1], was %v", predicate.arguments)
@@ -160,11 +161,11 @@ func TestFilterWhenPresentAndPredicateReturnsTrue(t *testing.T) {
 }
 
 func TestFilterWhenPresentAndPredicateReturnsFalse(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
 	predicate := capturingPredicate[int]{result: false}
 
-	filtered := o.Filter(predicate.Invoke)
+	filtered := opt.Filter(predicate.Invoke)
 
 	if !filtered.IsEmpty() {
 		t.Errorf("optional.Empty().Filter should return an empty Optional, was %v", filtered)
@@ -175,11 +176,11 @@ func TestFilterWhenPresentAndPredicateReturnsFalse(t *testing.T) {
 }
 
 func TestMapWhenEmpty(t *testing.T) {
-	o := Empty[string]()
+	opt := Empty[string]()
 
 	mapper := capturingFunction[string, string]{result: "foo"}
 
-	mapped := o.Map(mapper.Invoke)
+	mapped := opt.Map(mapper.Invoke)
 
 	if !mapped.IsEmpty() {
 		t.Errorf("optional.Empty().Map should return an empty Optional, was %v", mapped)
@@ -190,11 +191,11 @@ func TestMapWhenEmpty(t *testing.T) {
 }
 
 func TestMapWhenPresent(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
 	mapper := capturingFunction[int, int]{result: 2}
 
-	mapped := o.Map(mapper.Invoke)
+	mapped := opt.Map(mapper.Invoke)
 
 	if mapped.IsEmpty() {
 		t.Errorf("optional.Of(1).Map should not return an empty Optional")
@@ -208,11 +209,11 @@ func TestMapWhenPresent(t *testing.T) {
 }
 
 func TestGlobalMapWhenEmpty(t *testing.T) {
-	o := Empty[string]()
+	opt := Empty[string]()
 
 	mapper := capturingFunction[string, int]{result: 2}
 
-	mapped := Map(o, mapper.Invoke)
+	mapped := Map(opt, mapper.Invoke)
 
 	if !mapped.IsEmpty() {
 		t.Errorf("Map called with optional.Empty() should return an empty Optional, was %v", mapped)
@@ -223,11 +224,11 @@ func TestGlobalMapWhenEmpty(t *testing.T) {
 }
 
 func TestGlobalMapWhenPresent(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
 	mapper := capturingFunction[int, string]{result: "foo"}
 
-	mapped := Map(o, mapper.Invoke)
+	mapped := Map(opt, mapper.Invoke)
 
 	if mapped.IsEmpty() {
 		t.Errorf("Map called with optional.Of(1) should not return an empty Optional")
@@ -248,11 +249,11 @@ func TestMapNillableWhenEmpty(t *testing.T) {
 		result := parameters[i]
 
 		t.Run(fmt.Sprintf("Mapper returns %v", result), func(t *testing.T) {
-			o := Empty[string]()
+			opt := Empty[string]()
 
 			mapper := capturingFunction[string, *string]{result: result}
 
-			mapped := o.MapNillable(mapper.Invoke)
+			mapped := opt.MapNillable(mapper.Invoke)
 
 			if !mapped.IsEmpty() {
 				t.Errorf("optional.Empty().MapNillable should return an empty Optional, was %v", mapped)
@@ -265,11 +266,11 @@ func TestMapNillableWhenEmpty(t *testing.T) {
 }
 
 func TestMapNillableWhenPresentReturningNil(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
 	mapper := capturingFunction[int, *int]{result: nil}
 
-	mapped := o.MapNillable(mapper.Invoke)
+	mapped := opt.MapNillable(mapper.Invoke)
 
 	if !mapped.IsEmpty() {
 		t.Errorf("optional.Of(1).MapNillable should return an empty Optional if mapper returns nil, was %v", mapped)
@@ -280,12 +281,12 @@ func TestMapNillableWhenPresentReturningNil(t *testing.T) {
 }
 
 func TestMapNillableWhenPresentReturningNonNil(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
 	result := 2
 	mapper := capturingFunction[int, *int]{result: &result}
 
-	mapped := o.MapNillable(mapper.Invoke)
+	mapped := opt.MapNillable(mapper.Invoke)
 
 	if mapped.IsEmpty() {
 		t.Errorf("optional.Of(1).MapNillable should not return an empty Optional if mapper returns non-nil")
@@ -306,11 +307,11 @@ func TestGlobalMapNillableWhenEmpty(t *testing.T) {
 		result := parameters[i]
 
 		t.Run(fmt.Sprintf("Mapper returns %v", result), func(t *testing.T) {
-			o := Empty[int]()
+			opt := Empty[int]()
 
 			mapper := capturingFunction[int, *string]{result: result}
 
-			mapped := MapNillable(o, mapper.Invoke)
+			mapped := MapNillable(opt, mapper.Invoke)
 
 			if !mapped.IsEmpty() {
 				t.Errorf("MapNillable called with optional.Empty() should return an empty Optional, was %v", mapped)
@@ -323,11 +324,11 @@ func TestGlobalMapNillableWhenEmpty(t *testing.T) {
 }
 
 func TestGlobalMapNillableWhenPresentReturningNil(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
 	mapper := capturingFunction[int, *string]{result: nil}
 
-	mapped := MapNillable(o, mapper.Invoke)
+	mapped := MapNillable(opt, mapper.Invoke)
 
 	if !mapped.IsEmpty() {
 		t.Errorf("MapNillable called with optional.Of(1) should return an empty Optional if mapper returns nil, was %v", mapped)
@@ -338,12 +339,12 @@ func TestGlobalMapNillableWhenPresentReturningNil(t *testing.T) {
 }
 
 func TestGlobalMapNillableWhenPresentReturningNonNil(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
 	result := "foo"
 	mapper := capturingFunction[int, *string]{result: &result}
 
-	mapped := MapNillable(o, mapper.Invoke)
+	mapped := MapNillable(opt, mapper.Invoke)
 
 	if mapped.IsEmpty() {
 		t.Errorf("MapNillable called with optional.Of(1) should not return an empty Optional if mapper returns non-nil")
@@ -357,11 +358,11 @@ func TestGlobalMapNillableWhenPresentReturningNonNil(t *testing.T) {
 }
 
 func TestFlatMapWhenEmpty(t *testing.T) {
-	o := Empty[string]()
+	opt := Empty[string]()
 
 	mapper := capturingFunction[string, Optional[string]]{result: Of("foo")}
 
-	mapped := o.FlatMap(mapper.Invoke)
+	mapped := opt.FlatMap(mapper.Invoke)
 
 	if !mapped.IsEmpty() {
 		t.Errorf("optional.Empty().FlatMap should return an empty Optional, was %v", mapped)
@@ -372,11 +373,11 @@ func TestFlatMapWhenEmpty(t *testing.T) {
 }
 
 func TestFlatMapWhenPresentReturningEmpty(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
 	mapper := capturingFunction[int, Optional[int]]{result: Empty[int]()}
 
-	mapped := o.FlatMap(mapper.Invoke)
+	mapped := opt.FlatMap(mapper.Invoke)
 
 	if !mapped.IsEmpty() {
 		t.Errorf("optional.Of(1).FlatMap should return an empty Optional, was %v", mapped)
@@ -387,11 +388,11 @@ func TestFlatMapWhenPresentReturningEmpty(t *testing.T) {
 }
 
 func TestFlatMapWhenPresentReturningPresent(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
 	mapper := capturingFunction[int, Optional[int]]{result: Of(2)}
 
-	mapped := o.FlatMap(mapper.Invoke)
+	mapped := opt.FlatMap(mapper.Invoke)
 
 	if mapped.IsEmpty() {
 		t.Errorf("optional.Of(1).FlatMap should not return an empty Optional")
@@ -405,11 +406,11 @@ func TestFlatMapWhenPresentReturningPresent(t *testing.T) {
 }
 
 func TestGlobalFlatMapWhenEmpty(t *testing.T) {
-	o := Empty[string]()
+	opt := Empty[string]()
 
 	mapper := capturingFunction[string, Optional[int]]{result: Of(1)}
 
-	mapped := FlatMap(o, mapper.Invoke)
+	mapped := FlatMap(opt, mapper.Invoke)
 
 	if !mapped.IsEmpty() {
 		t.Errorf("FlatMap called with optional.Empty() should return an empty Optional, was %v", mapped)
@@ -420,11 +421,11 @@ func TestGlobalFlatMapWhenEmpty(t *testing.T) {
 }
 
 func TestGlobalFlatMapWhenPresentReturningEmpty(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
 	mapper := capturingFunction[int, Optional[string]]{result: Empty[string]()}
 
-	mapped := FlatMap(o, mapper.Invoke)
+	mapped := FlatMap(opt, mapper.Invoke)
 
 	if !mapped.IsEmpty() {
 		t.Errorf("FlatMap called with optional.Of(1) should return an empty Optional, was %v", mapped)
@@ -435,11 +436,11 @@ func TestGlobalFlatMapWhenPresentReturningEmpty(t *testing.T) {
 }
 
 func TestGlobalFlatMapWhenPresentReturningPresent(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
 	mapper := capturingFunction[int, Optional[string]]{result: Of("foo")}
 
-	mapped := FlatMap(o, mapper.Invoke)
+	mapped := FlatMap(opt, mapper.Invoke)
 
 	if mapped.IsEmpty() {
 		t.Errorf("FlatMap called with optional.Of(1) should not return an empty Optional")
@@ -453,14 +454,14 @@ func TestGlobalFlatMapWhenPresentReturningPresent(t *testing.T) {
 }
 
 func TestOrWhenEmptyReturningEmpty(t *testing.T) {
-	o := Empty[string]()
+	opt := Empty[string]()
 
 	supplier := capturingSupplier[Optional[string]]{result: Empty[string]()}
 
-	o2 := o.Or(supplier.Invoke)
+	opt2 := opt.Or(supplier.Invoke)
 
-	if !o2.IsEmpty() {
-		t.Errorf("optional.Empty().Or should return an empty Optional, was %v", o2)
+	if !opt2.IsEmpty() {
+		t.Errorf("optional.Empty().Or should return an empty Optional, was %v", opt2)
 	}
 	if supplier.invocations == 0 {
 		t.Errorf("supplier given to optional.Empty().Or should be invoked")
@@ -468,11 +469,11 @@ func TestOrWhenEmptyReturningEmpty(t *testing.T) {
 }
 
 func TestOrWhenEmptyReturningPresent(t *testing.T) {
-	o := Empty[string]()
+	opt := Empty[string]()
 
 	supplier := capturingSupplier[Optional[string]]{result: Of("foo")}
 
-	result := o.Or(supplier.Invoke)
+	result := opt.Or(supplier.Invoke)
 
 	if result.IsEmpty() {
 		t.Errorf("optional.Empty().Or should not return an empty Optional")
@@ -491,17 +492,17 @@ func TestOrWhenPresent(t *testing.T) {
 	for i := range parameters {
 		result := parameters[i]
 
-		o := Of(1)
+		opt := Of(1)
 
 		supplier := capturingSupplier[Optional[int]]{result: result}
 
-		o2 := o.Or(supplier.Invoke)
+		opt2 := opt.Or(supplier.Invoke)
 
-		if o2.IsEmpty() {
+		if opt2.IsEmpty() {
 			t.Errorf("optional.Of(1).Or should not return an empty Optional")
 		}
-		if *o2.value != 1 {
-			t.Errorf("optional.Of(2).Or should return an Optional with value 2, was %v", *o2.value)
+		if *opt2.value != 1 {
+			t.Errorf("optional.Of(2).Or should return an Optional with value 2, was %v", *opt2.value)
 		}
 		if supplier.invocations != 0 {
 			t.Errorf("supplier given to optional.Of(1).Or should not be invoked, #invocations %v", supplier.invocations)
@@ -510,9 +511,9 @@ func TestOrWhenPresent(t *testing.T) {
 }
 
 func TestSliceWhenEmpty(t *testing.T) {
-	o := Empty[string]()
+	opt := Empty[string]()
 
-	slice := o.Slice()
+	slice := opt.Slice()
 
 	if len(slice) != 0 {
 		t.Errorf("optional.Empty().Slice should return an empty slice, was %v", slice)
@@ -520,9 +521,9 @@ func TestSliceWhenEmpty(t *testing.T) {
 }
 
 func TestSliceWhenPresent(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
-	slice := o.Slice()
+	slice := opt.Slice()
 
 	if len(slice) != 1 || slice[0] != 1 {
 		t.Errorf("optional.Empty().Slice should return [1], was %v", slice)
@@ -530,9 +531,9 @@ func TestSliceWhenPresent(t *testing.T) {
 }
 
 func TestOrElseWhenEmpty(t *testing.T) {
-	o := Empty[string]()
+	opt := Empty[string]()
 
-	value := o.OrElse("foo")
+	value := opt.OrElse("foo")
 
 	if value != "foo" {
 		t.Errorf("optional.Empty().OrElse('foo') should return 'foo', was %v", value)
@@ -540,9 +541,9 @@ func TestOrElseWhenEmpty(t *testing.T) {
 }
 
 func TestOrElseWhenPresent(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
-	value := o.OrElse(2)
+	value := opt.OrElse(2)
 
 	if value != 1 {
 		t.Errorf("optional.Of(1).OrElse(2) should return 1, was %v", value)
@@ -550,11 +551,11 @@ func TestOrElseWhenPresent(t *testing.T) {
 }
 
 func TestOrElseGetWhenEmpty(t *testing.T) {
-	o := Empty[string]()
+	opt := Empty[string]()
 
 	supplier := capturingSupplier[string]{result: "foo"}
 
-	value := o.OrElseGet(supplier.Invoke)
+	value := opt.OrElseGet(supplier.Invoke)
 
 	if value != "foo" {
 		t.Errorf("optional.Empty().OrElseGet(() => 'foo') should return 'foo', was %v", value)
@@ -565,11 +566,11 @@ func TestOrElseGetWhenEmpty(t *testing.T) {
 }
 
 func TestOrElseGetWhenPresent(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
 	supplier := capturingSupplier[int]{result: 2}
 
-	value := o.OrElseGet(supplier.Invoke)
+	value := opt.OrElseGet(supplier.Invoke)
 
 	if value != 1 {
 		t.Errorf("optional.Of(1).OrElseGet(() => 2) should return 1, was %v", value)
@@ -580,7 +581,7 @@ func TestOrElseGetWhenPresent(t *testing.T) {
 }
 
 func TestOrElsePanicWhenEmpty(t *testing.T) {
-	o := Empty[string]()
+	opt := Empty[string]()
 
 	defer func() {
 		expectedMessage := "no value present"
@@ -592,15 +593,15 @@ func TestOrElsePanicWhenEmpty(t *testing.T) {
 		}
 	}()
 
-	o.OrElsePanic()
+	opt.OrElsePanic()
 
 	t.Error("expected an error")
 }
 
 func TestOrElsePanicWhenPresent(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
-	value := o.OrElsePanic()
+	value := opt.OrElsePanic()
 
 	if value != 1 {
 		t.Errorf("optional.Of(1).OrElsePanic should return 1, was %v", value)
@@ -608,9 +609,9 @@ func TestOrElsePanicWhenPresent(t *testing.T) {
 }
 
 func TestOrElseErrorWhenEmpty(t *testing.T) {
-	o := Empty[string]()
+	opt := Empty[string]()
 
-	value, err := o.OrElseError()
+	value, err := opt.OrElseError()
 
 	expectedMessage := "no value present"
 	if value != "" {
@@ -622,9 +623,9 @@ func TestOrElseErrorWhenEmpty(t *testing.T) {
 }
 
 func TestOrElseErrorWhenPresent(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
-	value, err := o.OrElseError()
+	value, err := opt.OrElseError()
 
 	if value != 1 {
 		t.Errorf("optional.Of(1).OrElseError should return 1, was %v", value)
@@ -635,16 +636,16 @@ func TestOrElseErrorWhenPresent(t *testing.T) {
 }
 
 func TestOrElseSupplyErrorWhenEmpty(t *testing.T) {
-	o := Empty[string]()
+	opt := Empty[string]()
 
 	supplier := capturingSupplier[error]{result: io.EOF}
 
-	value, err := o.OrElseSupplyError(supplier.Invoke)
+	value, err := opt.OrElseSupplyError(supplier.Invoke)
 
 	if value != "" {
 		t.Errorf("optional.Empty().OrElseSupplyError should return an empty string, was %v", value)
 	}
-	if err != io.EOF {
+	if !errors.Is(err, io.EOF) {
 		t.Errorf("optional.Empty().OrElseSupplyError should return io.EOF, was %v", err)
 	}
 	if supplier.invocations != 1 {
@@ -653,11 +654,11 @@ func TestOrElseSupplyErrorWhenEmpty(t *testing.T) {
 }
 
 func TestOrElseSupplyErrorWhenPresent(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
 	supplier := capturingSupplier[error]{result: io.EOF}
 
-	value, err := o.OrElseSupplyError(supplier.Invoke)
+	value, err := opt.OrElseSupplyError(supplier.Invoke)
 
 	if value != 1 {
 		t.Errorf("optional.Of(1).OrElseSupplyError should return 1, was %v", value)
@@ -671,9 +672,9 @@ func TestOrElseSupplyErrorWhenPresent(t *testing.T) {
 }
 
 func TestStringWhenEmpty(t *testing.T) {
-	o := Empty[string]()
+	opt := Empty[string]()
 
-	s := o.String()
+	s := opt.String()
 
 	expectedValue := "Optional.empty"
 	if s != expectedValue {
@@ -682,9 +683,9 @@ func TestStringWhenEmpty(t *testing.T) {
 }
 
 func TestStringWhenPresent(t *testing.T) {
-	o := Of(1)
+	opt := Of(1)
 
-	s := o.String()
+	s := opt.String()
 
 	expectedValue := "Optional[1]"
 	if s != expectedValue {
@@ -693,47 +694,47 @@ func TestStringWhenPresent(t *testing.T) {
 }
 
 func TestEqualWithEmptyAndEmpty(t *testing.T) {
-	o1 := Empty[string]()
-	o2 := Empty[string]()
+	opt1 := Empty[string]()
+	opt2 := Empty[string]()
 
-	if !Equal(o1, o2) {
-		t.Errorf("%v and %v should be equal", o1, o2)
+	if !Equal(opt1, opt2) {
+		t.Errorf("%v and %v should be equal", opt1, opt2)
 	}
 }
 
 func TestEqualWithEmptyAndPresent(t *testing.T) {
-	o1 := Empty[string]()
-	o2 := Of("foo")
+	opt1 := Empty[string]()
+	opt2 := Of("foo")
 
-	if Equal(o1, o2) {
-		t.Errorf("%v and %v should not be equal", o1, o2)
+	if Equal(opt1, opt2) {
+		t.Errorf("%v and %v should not be equal", opt1, opt2)
 	}
 }
 
 func TestEqualWithPresentAndEmpty(t *testing.T) {
-	o1 := Of("foo")
-	o2 := Empty[string]()
+	opt1 := Of("foo")
+	opt2 := Empty[string]()
 
-	if Equal(o1, o2) {
-		t.Errorf("%v and %v should not be equal", o1, o2)
+	if Equal(opt1, opt2) {
+		t.Errorf("%v and %v should not be equal", opt1, opt2)
 	}
 }
 
 func TestEqualWithPresentWithEqualValues(t *testing.T) {
-	o1 := Of(1)
-	o2 := Of(1)
+	opt1 := Of(1)
+	opt2 := Of(1)
 
-	if !Equal(o1, o2) {
-		t.Errorf("%v and %v should be equal", o1, o2)
+	if !Equal(opt1, opt2) {
+		t.Errorf("%v and %v should be equal", opt1, opt2)
 	}
 }
 
 func TestEqualWithPresentWithUnequalValues(t *testing.T) {
-	o1 := Of(1)
-	o2 := Of(2)
+	opt1 := Of(1)
+	opt2 := Of(2)
 
-	if Equal(o1, o2) {
-		t.Errorf("%v and %v should not be equal", o1, o2)
+	if Equal(opt1, opt2) {
+		t.Errorf("%v and %v should not be equal", opt1, opt2)
 	}
 }
 
