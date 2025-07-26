@@ -65,6 +65,7 @@ func (o Optional[T]) Filter(predicate func(value T) bool) Optional[T] {
 	if o.value == nil || predicate(*o.value) {
 		return o
 	}
+
 	return Empty[T]()
 }
 
@@ -76,6 +77,7 @@ func (o Optional[T]) Map(mapper func(value T) T) Optional[T] {
 	if o.value == nil {
 		return o
 	}
+
 	return Of(mapper(*o.value))
 }
 
@@ -86,6 +88,7 @@ func Map[T any, U any](optional Optional[T], mapper func(value T) U) Optional[U]
 	if optional.value == nil {
 		return Empty[U]()
 	}
+
 	return Of(mapper(*optional.value))
 }
 
@@ -98,6 +101,7 @@ func (o Optional[T]) MapNillable(mapper func(value T) *T) Optional[T] {
 	if o.value == nil {
 		return o
 	}
+
 	return OfNillable(mapper(*o.value))
 }
 
@@ -109,6 +113,7 @@ func MapNillable[T any, U any](optional Optional[T], mapper func(value T) *U) Op
 	if optional.value == nil {
 		return Empty[U]()
 	}
+
 	return OfNillable(mapper(*optional.value))
 }
 
@@ -120,6 +125,7 @@ func (o Optional[T]) FlatMap(mapper func(value T) Optional[T]) Optional[T] {
 	if o.value == nil {
 		return o
 	}
+
 	return mapper(*o.value)
 }
 
@@ -130,6 +136,7 @@ func FlatMap[T any, U any](optional Optional[T], mapper func(value T) Optional[U
 	if optional.value == nil {
 		return Empty[U]()
 	}
+
 	return mapper(*optional.value)
 }
 
@@ -138,6 +145,7 @@ func (o Optional[T]) Or(supplier func() Optional[T]) Optional[T] {
 	if o.value != nil {
 		return o
 	}
+
 	return supplier()
 }
 
@@ -147,6 +155,7 @@ func (o Optional[T]) Slice() []T {
 	if o.value != nil {
 		result = append(result, *o.value)
 	}
+
 	return result
 }
 
@@ -155,6 +164,7 @@ func (o Optional[T]) OrElse(other T) T {
 	if o.value != nil {
 		return *o.value
 	}
+
 	return other
 }
 
@@ -163,6 +173,7 @@ func (o Optional[T]) OrElseGet(supplier func() T) T {
 	if o.value != nil {
 		return *o.value
 	}
+
 	return supplier()
 }
 
@@ -171,6 +182,7 @@ func (o Optional[T]) OrElsePanic() T {
 	if o.value == nil {
 		log.Panic(noValuePresentMessage)
 	}
+
 	return *o.value
 }
 
@@ -178,8 +190,10 @@ func (o Optional[T]) OrElsePanic() T {
 func (o Optional[T]) OrElseError() (T, error) {
 	if o.value == nil {
 		var zero T
+
 		return zero, errNoValuePresent
 	}
+
 	return *o.value, nil
 }
 
@@ -187,8 +201,10 @@ func (o Optional[T]) OrElseError() (T, error) {
 func (o Optional[T]) OrElseSupplyError(errorSupplier func() error) (T, error) {
 	if o.value == nil {
 		var zero T
+
 		return zero, errorSupplier()
 	}
+
 	return *o.value, nil
 }
 
@@ -197,6 +213,7 @@ func (o Optional[T]) String() string {
 	if o.value == nil {
 		return "Optional.empty"
 	}
+
 	return fmt.Sprintf("Optional[%v]", *o.value)
 }
 
@@ -205,8 +222,10 @@ func Equal[T comparable](opt Optional[T], other Optional[T]) bool {
 	if opt.value == nil && other.value == nil {
 		return true
 	}
+
 	if opt.value == nil || other.value == nil {
 		return false
 	}
+
 	return *opt.value == *other.value
 }

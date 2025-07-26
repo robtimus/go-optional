@@ -3,7 +3,6 @@ linters:
   default: all
   disable:
     - exhaustruct
-    - nlreturn
     - testpackage
     - wsl
 
