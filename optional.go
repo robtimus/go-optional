@@ -34,7 +34,7 @@ func OfNillable[T any](value *T) Optional[T] {
 
 // Omit Get, require one of the OrElse methods instead
 
-// IfPresent returns true if a value is present, or false otherwise.
+// IsPresent returns true if a value is present, or false otherwise.
 func (o Optional[T]) IsPresent() bool {
 	return o.value != nil
 }
