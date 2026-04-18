@@ -2,7 +2,6 @@
 [![Build Status](https://github.com/robtimus/go-optional/actions/workflows/build.yml/badge.svg)](https://github.com/robtimus/go-optional/actions/workflows/build.yml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=robtimus%3Ago-optional&metric=alert_status)](https://sonarcloud.io/summary/overall?id=robtimus%3Ago-optional)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=robtimus%3Ago-optional&metric=coverage)](https://sonarcloud.io/summary/overall?id=robtimus%3Ago-optional)
-[![Known Vulnerabilities](https://snyk.io/test/github/robtimus/go-optional/badge.svg)](https://snyk.io/test/github/robtimus/go-optional)
 
 A simple implementation of optionals in Go, based on Java's [Optional](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/util/Optional.html) class.
 
