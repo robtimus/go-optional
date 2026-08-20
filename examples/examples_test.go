@@ -19,7 +19,7 @@ func TestMapChaining(t *testing.T) {
 		return len(input)
 	}
 
-	opt2 := optional.Map(optional.Map(opt1, func1).Map(func2), func3)
+	opt2 := opt1.Map(func1).Map(func2).Map(func3)
 
 	if opt2.OrElse(0) != 3 {
 		t.Errorf("o2 should be present with value 3")

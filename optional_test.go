@@ -222,12 +222,12 @@ func TestMapWhenPresent(t *testing.T) {
 	}
 }
 
-func TestGlobalMapWhenEmpty(t *testing.T) {
+func TestMapToDifferentTypeWhenEmpty(t *testing.T) {
 	opt := Empty[string]()
 
 	mapper := capturingFunction[string, int]{result: 2}
 
-	mapped := Map(opt, mapper.Invoke)
+	mapped := opt.Map(mapper.Invoke)
 
 	if !mapped.IsEmpty() {
 		t.Errorf("Map called with optional.Empty() should return an empty Optional, was %v", mapped)
@@ -238,12 +238,12 @@ func TestGlobalMapWhenEmpty(t *testing.T) {
 	}
 }
 
-func TestGlobalMapWhenPresent(t *testing.T) {
+func TestMapToDifferentTypeWhenPresent(t *testing.T) {
 	opt := Of(1)
 
 	mapper := capturingFunction[int, string]{result: "foo"}
 
-	mapped := Map(opt, mapper.Invoke)
+	mapped := opt.Map(mapper.Invoke)
 
 	if mapped.IsEmpty() {
 		t.Errorf("Map called with optional.Of(1) should not return an empty Optional")
@@ -320,7 +320,7 @@ func TestMapNillableWhenPresentReturningNonNil(t *testing.T) {
 	}
 }
 
-func TestGlobalMapNillableWhenEmpty(t *testing.T) {
+func TestMapNillableToDifferentTypeWhenEmpty(t *testing.T) {
 	foo := "foo"
 	parameters := []*string{nil, &foo}
 
@@ -332,7 +332,7 @@ func TestGlobalMapNillableWhenEmpty(t *testing.T) {
 
 			mapper := capturingFunction[int, *string]{result: result}
 
-			mapped := MapNillable(opt, mapper.Invoke)
+			mapped := opt.MapNillable(mapper.Invoke)
 
 			if !mapped.IsEmpty() {
 				t.Errorf("MapNillable called with optional.Empty() should return an empty Optional, was %v", mapped)
@@ -345,12 +345,12 @@ func TestGlobalMapNillableWhenEmpty(t *testing.T) {
 	}
 }
 
-func TestGlobalMapNillableWhenPresentReturningNil(t *testing.T) {
+func TestMapNillableToDifferentTypeWhenPresentReturningNil(t *testing.T) {
 	opt := Of(1)
 
 	mapper := capturingFunction[int, *string]{result: nil}
 
-	mapped := MapNillable(opt, mapper.Invoke)
+	mapped := opt.MapNillable(mapper.Invoke)
 
 	if !mapped.IsEmpty() {
 		t.Errorf("MapNillable called with optional.Of(1) should return an empty Optional if mapper returns nil, was %v", mapped)
@@ -361,13 +361,13 @@ func TestGlobalMapNillableWhenPresentReturningNil(t *testing.T) {
 	}
 }
 
-func TestGlobalMapNillableWhenPresentReturningNonNil(t *testing.T) {
+func TestMapNillableToDifferentTypeWhenPresentReturningNonNil(t *testing.T) {
 	opt := Of(1)
 
 	result := "foo"
 	mapper := capturingFunction[int, *string]{result: &result}
 
-	mapped := MapNillable(opt, mapper.Invoke)
+	mapped := opt.MapNillable(mapper.Invoke)
 
 	if mapped.IsEmpty() {
 		t.Errorf("MapNillable called with optional.Of(1) should not return an empty Optional if mapper returns non-nil")
@@ -434,12 +434,12 @@ func TestFlatMapWhenPresentReturningPresent(t *testing.T) {
 	}
 }
 
-func TestGlobalFlatMapWhenEmpty(t *testing.T) {
+func TestFlatMapToDifferentTypeWhenEmpty(t *testing.T) {
 	opt := Empty[string]()
 
 	mapper := capturingFunction[string, Optional[int]]{result: Of(1)}
 
-	mapped := FlatMap(opt, mapper.Invoke)
+	mapped := opt.FlatMap(mapper.Invoke)
 
 	if !mapped.IsEmpty() {
 		t.Errorf("FlatMap called with optional.Empty() should return an empty Optional, was %v", mapped)
@@ -450,12 +450,12 @@ func TestGlobalFlatMapWhenEmpty(t *testing.T) {
 	}
 }
 
-func TestGlobalFlatMapWhenPresentReturningEmpty(t *testing.T) {
+func TestFlatMapToDifferentTypeWhenPresentReturningEmpty(t *testing.T) {
 	opt := Of(1)
 
 	mapper := capturingFunction[int, Optional[string]]{result: Empty[string]()}
 
-	mapped := FlatMap(opt, mapper.Invoke)
+	mapped := opt.FlatMap(mapper.Invoke)
 
 	if !mapped.IsEmpty() {
 		t.Errorf("FlatMap called with optional.Of(1) should return an empty Optional, was %v", mapped)
@@ -466,12 +466,12 @@ func TestGlobalFlatMapWhenPresentReturningEmpty(t *testing.T) {
 	}
 }
 
-func TestGlobalFlatMapWhenPresentReturningPresent(t *testing.T) {
+func TestFlatMapToDifferentTypeWhenPresentReturningPresent(t *testing.T) {
 	opt := Of(1)
 
 	mapper := capturingFunction[int, Optional[string]]{result: Of("foo")}
 
-	mapped := FlatMap(opt, mapper.Invoke)
+	mapped := opt.FlatMap(mapper.Invoke)
 
 	if mapped.IsEmpty() {
 		t.Errorf("FlatMap called with optional.Of(1) should not return an empty Optional")

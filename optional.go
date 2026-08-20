@@ -70,74 +70,31 @@ func (o Optional[T]) Filter(predicate func(value T) bool) Optional[T] {
 }
 
 // Map returns a non-empty Optional containing the result of calling the given mapper function on the value if present, or an empty Optional otherwise.
-//
-// Due to the limitations of generics in Go, the mapper function must return the Optional's generic type.
-// The [Map] function can be used to map to different types.
-func (o Optional[T]) Map(mapper func(value T) T) Optional[T] {
+func (o Optional[T]) Map[U any](mapper func(value T) U) Optional[U] {
 	if o.value == nil {
-		return o
+		return Empty[U]()
 	}
 
 	return Of(mapper(*o.value))
 }
 
-// Map returns a non-empty Optional containing the result of calling the given mapper function on the given Optional's value if present, or an empty Optional otherwise.
-//
-// This function can be used where the generic type of the Optional and the mapper function's return type do not match.
-func Map[T any, U any](optional Optional[T], mapper func(value T) U) Optional[U] {
-	if optional.value == nil {
-		return Empty[U]()
-	}
-
-	return Of(mapper(*optional.value))
-}
-
 // MapNillable returns a possibly empty Optional (as if by [OfNillable]) based on the result of calling the given mapper function on the value if present,
 // or an empty Optional otherwise.
-//
-// Due to the limitations of generics in Go, the mapper function must return a pointer to the Optional's generic type.
-// The [MapNillable] function can be used to map to different types.
-func (o Optional[T]) MapNillable(mapper func(value T) *T) Optional[T] {
+func (o Optional[T]) MapNillable[U any](mapper func(value T) *U) Optional[U] {
 	if o.value == nil {
-		return o
+		return Empty[U]()
 	}
 
 	return OfNillable(mapper(*o.value))
 }
 
-// MapNillable returns a possibly empty Optional (as if by [OfNillable]) based on the result of calling the given mapper function on the given Optional's value if present,
-// or an empty Optional otherwise.
-//
-// This function can be used where the generic type of the Optional and the mapper function's return type do not match.
-func MapNillable[T any, U any](optional Optional[T], mapper func(value T) *U) Optional[U] {
-	if optional.value == nil {
-		return Empty[U]()
-	}
-
-	return OfNillable(mapper(*optional.value))
-}
-
 // FlatMap returns the result of applying the given function if the value is present, or an empty Optional otherwise.
-//
-// Due to the limitations of generics in Go, the mapper function must return the Optional's exact type.
-// The [FlatMap] function can be used to map to different types.
-func (o Optional[T]) FlatMap(mapper func(value T) Optional[T]) Optional[T] {
+func (o Optional[T]) FlatMap[U any](mapper func(value T) Optional[U]) Optional[U] {
 	if o.value == nil {
-		return o
+		return Empty[U]()
 	}
 
 	return mapper(*o.value)
-}
-
-// FlatMap returns the result of applying the given function if the given Optional's value is present, or an empty Optional otherwise.
-//
-// This function can be used where the generic type of the Optional and the mapper function's return type do not match.
-func FlatMap[T any, U any](optional Optional[T], mapper func(value T) Optional[U]) Optional[U] {
-	if optional.value == nil {
-		return Empty[U]()
-	}
-
-	return mapper(*optional.value)
 }
 
 // Or returns the Optional if the value is present, or the result of calling the given function otherwise.
